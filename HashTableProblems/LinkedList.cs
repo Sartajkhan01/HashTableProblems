@@ -6,112 +6,81 @@ using System.Threading.Tasks;
 
 namespace HashTableProblems
 {
-    class LinkedList<K, V> where K : IComparable
+    public class LinkedHashMap<K, V> where K : IComparable
+
     {
+        private readonly int NumBuckets;
+        readonly List<LinkedList<K, V>> BucketList;
 
-        public MyMapNode<K, V> head;
-        public MyMapNode<K, V> tail;
-
-        public LinkedList()
+        public LinkedHashMap(int NumBuckets)
         {
-            head = null;
-            tail = null;
+
+            this.NumBuckets = NumBuckets;
+            BucketList = new List<LinkedList<K, V>>(NumBuckets);
+
+            for (int i = 0; i < this.NumBuckets; i++)
+                BucketList.Add(null);
         }
-        public MyMapNode<K, V> Search(K key)
+
+        public V Get(K key)
         {
 
-            MyMapNode<K, V> temp = head;
-            while (temp != null)
+            int index = GetBucketIndex(key);
+
+            LinkedList<K, V> myLinkedList = BucketList[index];
+            if (myLinkedList == null)
+                return default;
+
+            MyMapNode<K, V> myMapNode = myLinkedList.Search(key);
+            return (myMapNode == null) ? default : myMapNode.value;
+        }
+
+        private int GetBucketIndex(K key)
+        {
+
+            int hashCode = Math.Abs(key.GetHashCode());
+            int index = hashCode % NumBuckets;
+            return index;
+        }
+
+        public void Add(K key, V value)
+        {
+
+            int index = this.GetBucketIndex(key);
+            LinkedList<K, V> myLinkedList = BucketList[index];
+
+            if (myLinkedList == null)
             {
-                if (temp.key.Equals(key))
-                    return temp;
-                temp = temp.next;
+                myLinkedList = new LinkedList<K, V>();
+                BucketList[index] = myLinkedList;
+
             }
-            return null;
-        }
-        public void Append(MyMapNode<K, V> node)
-        {
 
-            if (head == null && tail == null)
+            MyMapNode<K, V> myMapNode = myLinkedList.Search(key);
+            if (myMapNode == null)
             {
-                head = node;
-                tail = node;
+                myMapNode = new MyMapNode<K, V>(key, value);
+                myLinkedList.Append(myMapNode);
             }
-            else
-            {
-
-                tail.next = node;
-                tail = node;
-            }
+            else myMapNode.value = value;
         }
-        public bool IsEmpty()
-        {
-            return head == null && tail == null;
-        }
-
-        public MyMapNode<K, V> Pop()
+        public void Remove(K key)
         {
 
-            MyMapNode<K, V> temp = head;
-            if (head != null)
+            int index = GetBucketIndex(key);
+            LinkedList<K, V> myLinkedList = BucketList[index];
+
+            if (myLinkedList != null)
             {
 
-                head = head.next;
-            }
-            return temp;
-        }
-
-        public MyMapNode<K, V> PopLast()
-        {
-            MyMapNode<K, V> tailTemp = tail;
-            if (!IsEmpty())
-            {
-
-                MyMapNode<K, V> temp = head;
-                while (temp.next != tail)
+                MyMapNode<K, V> myMapNode = myLinkedList.Search(key);
+                if (myMapNode != null)
                 {
-
-                    temp = temp.next;
-                }
-
-                temp.next = null;
-                tail = temp;
-            }
-            return tailTemp;
-        }
-
-        public bool DeleteNode(MyMapNode<K, V> DeleteNode)
-        {
-
-            MyMapNode<K, V> temp = head;
-            if (!IsEmpty())
-            {
-
-                if (DeleteNode.key.Equals(head.key))
-                {
-                    Pop();
-                    return true;
-                }
-
-                if (DeleteNode.key.Equals(tail.key))
-                {
-                    PopLast();
-                    return true;
-                }
-                while (temp != null)
-                {
-
-                    if (temp.next != null && temp.next.key.Equals(DeleteNode.key))
-                    {
-                        temp.next = DeleteNode.next;
-                        return true;
-                    }
-                    temp = temp.next;
+                    myLinkedList.DeleteNode(myMapNode);
                 }
             }
-            return false;
+
+
         }
-
-
     }
 }
